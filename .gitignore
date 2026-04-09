@@ -1,0 +1,55 @@
+﻿# ==============================
+# General
+# ==============================
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==============================
+# IDEs and Editors
+# ==============================
+.idea/
+.vscode/
+*.swp
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+.factorypath
+
+# ==============================
+# Frontend (React / Vite.js)
+# ==============================
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+frontend/coverage/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# ==============================
+# Backend (Java / Spring / Gradle)
+# ==============================
+backend/.gradle/
+backend/build/
+backend/out/
+backend/bin/
+backend/*.class
+backend/*.jar
+backend/*.war
+backend/*.ear
+backend/hs_err_pid*
+backend/replay_pid*
+
+# Keep gradle wrapper jar
+!backend/gradle/wrapper/gradle-wrapper.jar
+
