@@ -6,7 +6,17 @@ import java.util.Random;
 
 public class SimpleBinaryTree<T extends Comparable<T>> extends BinaryTree<T>{
 
-    private final Random r = new Random();
+    private final Random r;
+
+    public SimpleBinaryTree() {
+        super();
+        r = new Random();
+    }
+
+    protected SimpleBinaryTree(int seed) {
+        super();
+        this.r = new Random(seed);
+    }
 
     /**
      * Рандомным образом вставляет значение
@@ -15,9 +25,11 @@ public class SimpleBinaryTree<T extends Comparable<T>> extends BinaryTree<T>{
      */
     @Override
     public void insert(T val) {
+        if(val == null)
+            throw new IllegalArgumentException("Значение не может быть null!");
 
         if(this.root == null) {
-            this.root = new Node(val);
+            this.root = new Node<T>(val);
             incSize();
             return;
         }
@@ -25,20 +37,20 @@ public class SimpleBinaryTree<T extends Comparable<T>> extends BinaryTree<T>{
         insert(this.root, val, this.r);
     }
 
-    private void insert(Node n, T val, Random r) {
+    private void insert(Node<T> n, T val, Random r) {
 
         int c = r.nextInt(2);
 
         if(c == 0) {
             if(n.left == null) {
-                n.left = new Node(val);
+                n.left = new Node<T>(val);
                 incSize();
                 return;
             }
             insert(n.left, val, r);
         } else {
             if(n.right == null) {
-                n.right = new Node(val);
+                n.right = new Node<T>(val);
                 incSize();
                 return;
             }
@@ -46,81 +58,81 @@ public class SimpleBinaryTree<T extends Comparable<T>> extends BinaryTree<T>{
         }
     }
 
+    // todo: подумать над оптимизацией - слишком дорогой метод.
     @Override
     public boolean delete(T val) {
-        // todo как то обрабатывать удалене корня
-        if(this.root == null || this.root.val.equals(val)) return false;
-        Deque<Node> stack = new ArrayDeque<>();
+        if(val == null)
+            throw new IllegalArgumentException("Значение не может быть null!");
+        if(this.root == null) return false;
+        Deque<Node<T>> stack = new ArrayDeque<>();
         stack.push(this.root);
 
         while(!stack.isEmpty()) {
-            Node n = stack.pop();
+            Node<T> n = stack.pop();
+
+            if(n.val.equals(val)) {
+                Node<T> temp = n.right;
+                Node<T> curr = n.left;
+                n.left = curr.left;
+                n.right = curr.right;
+                n.val = curr.val;
+                return reinsertBranch(temp);
+            }
 
             if(n.right != null) {
                 stack.push(n.right);
-                // аналогично с левым, если правый совпал то оставляем правую ветвь
+                // Замена на правую ветвь, перевствака левой
                 if(n.right.val.equals(val)) {
-                    Node temp = n.right.left;
+                    Node<T> temp = n.right.left;
                     n.right = n.right.right;
 
-                    // синхронизация size (временное решение)
-                    int c = this.getBranchSize(temp);
-                    for(int i = 0; i < c; i++) this.decSize();
-
-                    Deque<Node> tStack = new ArrayDeque<>();
-                    if(temp != null) tStack.push(temp);
-
-                    while(!tStack.isEmpty()) {
-                        Node tempN = tStack.pop();
-
-                        if(tempN.right != null) tStack.push(tempN.right);
-                        if(tempN.left != null) tStack.push(tempN.left);
-
-                        this.insert(tempN.val);
-                    }
-
-                    decSize();
-                    return true;
+                    return reinsertBranch(temp);
                 }
             }
+
             if(n.left != null) {
                 stack.push(n.left);
-                // если левый потомок совпал, то оставляем его леву часть а правую перевставляем
+                // замена на левую ветвь, перевставка правой
                 if(n.left.val.equals(val)) {
-                    Node temp = n.left.right;
+                    Node<T> temp = n.left.right;
                     n.left = n.left.left;
 
-                    int c = this.getBranchSize(temp);
-                    for(int i = 0; i < c; i++) this.decSize();
-
-                    Deque<Node> tStack = new ArrayDeque<>();
-                    if(temp != null) tStack.push(temp);
-
-                    while(!tStack.isEmpty()) {
-                        Node tempN = tStack.pop();
-
-                        if(tempN.right != null) tStack.push(tempN.right);
-                        if(tempN.left != null) tStack.push(tempN.left);
-
-                        this.insert(tempN.val);
-                    }
-
-                    decSize();
-                    return true;
+                    return reinsertBranch(temp);
                 }
             }
         }
         return false;
     }
 
+    private boolean reinsertBranch(Node<T> temp) {
+        this.setSize(this.size()-this.getBranchSize(temp));
+
+        Deque<Node<T>> tStack = new ArrayDeque<>();
+        if(temp != null) tStack.push(temp);
+
+        while(!tStack.isEmpty()) {
+            Node<T> tempN = tStack.pop();
+
+            if(tempN.right != null) tStack.push(tempN.right);
+            if(tempN.left != null) tStack.push(tempN.left);
+
+            this.insert(tempN.val);
+        }
+
+        decSize();
+        return true;
+    }
+
     @Override
     public boolean search(T val) {
+        if(val == null)
+            throw new IllegalArgumentException("Значение не может быть null!");
         if(this.root == null) return false;
-        Deque<Node> stack = new ArrayDeque<>();
+        Deque<Node<T>> stack = new ArrayDeque<>();
         stack.push(this.root);
 
         while(!stack.isEmpty()) {
-            Node n = stack.pop();
+            Node<T> n = stack.pop();
 
             if(n.val.equals(val)) return true;
             if(n.right != null) stack.push(n.right);
