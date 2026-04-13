@@ -29,7 +29,7 @@ public class SimpleBinaryTree<T extends Comparable<T>> extends BinaryTree<T>{
             throw new IllegalArgumentException("Значение не может быть null!");
 
         if(this.root == null) {
-            this.root = new Node<T>(val);
+            this.root = new TreeNode<T>(val);
             incSize();
             return;
         }
@@ -37,24 +37,24 @@ public class SimpleBinaryTree<T extends Comparable<T>> extends BinaryTree<T>{
         insert(this.root, val, this.r);
     }
 
-    private void insert(Node<T> n, T val, Random r) {
+    private void insert(TreeNode<T> node, T val, Random r) {
 
         int c = r.nextInt(2);
 
         if(c == 0) {
-            if(n.left == null) {
-                n.left = new Node<T>(val);
+            if(node.left == null) {
+                node.left = new TreeNode<>(val);
                 incSize();
                 return;
             }
-            insert(n.left, val, r);
+            insert(node.left, val, r);
         } else {
-            if(n.right == null) {
-                n.right = new Node<T>(val);
+            if(node.right == null) {
+                node.right = new TreeNode<>(val);
                 incSize();
                 return;
             }
-            insert(n.right, val, r);
+            insert(node.right, val, r);
         }
     }
 
@@ -64,38 +64,38 @@ public class SimpleBinaryTree<T extends Comparable<T>> extends BinaryTree<T>{
         if(val == null)
             throw new IllegalArgumentException("Значение не может быть null!");
         if(this.root == null) return false;
-        Deque<Node<T>> stack = new ArrayDeque<>();
+        Deque<TreeNode<T>> stack = new ArrayDeque<>();
         stack.push(this.root);
 
         while(!stack.isEmpty()) {
-            Node<T> n = stack.pop();
+            TreeNode<T> node = stack.pop();
 
-            if(n.val.equals(val)) {
-                Node<T> temp = n.right;
-                Node<T> curr = n.left;
-                n.left = curr.left;
-                n.right = curr.right;
-                n.val = curr.val;
+            if(node.val.equals(val)) {
+                TreeNode<T> temp = node.right;
+                TreeNode<T> curr = node.left;
+                node.left = curr.left;
+                node.right = curr.right;
+                node.val = curr.val;
                 return reinsertBranch(temp);
             }
 
-            if(n.right != null) {
-                stack.push(n.right);
+            if(node.right != null) {
+                stack.push(node.right);
                 // Замена на правую ветвь, перевствака левой
-                if(n.right.val.equals(val)) {
-                    Node<T> temp = n.right.left;
-                    n.right = n.right.right;
+                if(node.right.val.equals(val)) {
+                    TreeNode<T> temp = node.right.left;
+                    node.right = node.right.right;
 
                     return reinsertBranch(temp);
                 }
             }
 
-            if(n.left != null) {
-                stack.push(n.left);
+            if(node.left != null) {
+                stack.push(node.left);
                 // замена на левую ветвь, перевставка правой
-                if(n.left.val.equals(val)) {
-                    Node<T> temp = n.left.right;
-                    n.left = n.left.left;
+                if(node.left.val.equals(val)) {
+                    TreeNode<T> temp = node.left.right;
+                    node.left = node.left.left;
 
                     return reinsertBranch(temp);
                 }
@@ -104,14 +104,14 @@ public class SimpleBinaryTree<T extends Comparable<T>> extends BinaryTree<T>{
         return false;
     }
 
-    private boolean reinsertBranch(Node<T> temp) {
+    private boolean reinsertBranch(TreeNode<T> temp) {
         this.setSize(this.size()-this.getBranchSize(temp));
 
-        Deque<Node<T>> tStack = new ArrayDeque<>();
+        Deque<TreeNode<T>> tStack = new ArrayDeque<>();
         if(temp != null) tStack.push(temp);
 
         while(!tStack.isEmpty()) {
-            Node<T> tempN = tStack.pop();
+            TreeNode<T> tempN = tStack.pop();
 
             if(tempN.right != null) tStack.push(tempN.right);
             if(tempN.left != null) tStack.push(tempN.left);
@@ -128,15 +128,15 @@ public class SimpleBinaryTree<T extends Comparable<T>> extends BinaryTree<T>{
         if(val == null)
             throw new IllegalArgumentException("Значение не может быть null!");
         if(this.root == null) return false;
-        Deque<Node<T>> stack = new ArrayDeque<>();
+        Deque<TreeNode<T>> stack = new ArrayDeque<>();
         stack.push(this.root);
 
         while(!stack.isEmpty()) {
-            Node<T> n = stack.pop();
+            TreeNode<T> node = stack.pop();
 
-            if(n.val.equals(val)) return true;
-            if(n.right != null) stack.push(n.right);
-            if(n.left != null) stack.push(n.left);
+            if(node.val.equals(val)) return true;
+            if(node.right != null) stack.push(node.right);
+            if(node.left != null) stack.push(node.left);
         }
 
         return false;

@@ -4,21 +4,24 @@ import lombok.Getter;
 import lombok.Setter;
 import java.util.*;
 
+/*
+    Абстрактный класс, предок всех бинарных деревьев
+ */
 public abstract class BinaryTree<T extends Comparable<T>> {
 
     @Getter
     @Setter
-    protected static class Node<T extends Comparable<T>> {
+    protected static class TreeNode<T extends Comparable<T>> {
         T val;
-        Node<T> left;
-        Node<T> right;
+        TreeNode<T> left;
+        TreeNode<T> right;
 
-        Node(T v) {
+        TreeNode(T v) {
             this.val = v;
         }
     }
 
-    protected Node<T> root;
+    protected TreeNode<T> root;
     private int size;
 
     public BinaryTree() {
@@ -35,27 +38,10 @@ public abstract class BinaryTree<T extends Comparable<T>> {
     public int size() {
         return this.size;
     }
-    protected void incSize() {
-        this.size++;
-    }
-    protected void decSize() {
-        this.size--;
-    }
-    protected void setSize(int newSize) {
-        this.size = newSize;
-    }
-
-    protected int getBranchSize(Node<T> n) {
-        return inorder(n).size();
-    }
 
     public int height() {
         if(this.root == null) return 0;
         return height(this.root);
-    }
-    private int height(Node<T> n) {
-        if (n == null) return 0;
-        return 1 + Math.max(height(n.left), height(n.right));
     }
 
     public void clear() {
@@ -75,12 +61,47 @@ public abstract class BinaryTree<T extends Comparable<T>> {
         return inorderEquals(this.root, tree.root);
     }
 
-    // todo: придумать нормальную хэш-функцию,
-    // т.к может быть пересечение коллизий
-    // (хотя кто кладет бинарные деревья в key hashmap -_-)
     @Override
     public int hashCode() {
-        return this.inorder().hashCode();
+        return this.hashCodeHelper(this.root);
+    }
+
+    // хелперы
+    protected int getBranchSize(TreeNode<T> node) {
+        return inorder(node).size();
+    }
+
+    protected void incSize() {
+        this.size++;
+    }
+
+    protected void decSize() {
+        this.size--;
+    }
+
+    protected void setSize(int newSize) {
+        this.size = newSize;
+    }
+
+    private int height(TreeNode<T> node) {
+        if (node == null) return 0;
+        return 1 + Math.max(height(node.left), height(node.right));
+    }
+
+    private boolean inorderEquals(TreeNode<? extends Comparable<?>> node1, TreeNode<? extends Comparable<?>> node2) {
+        if(node1 == null && node2 == null) return true;
+        if(node1 == null || node2 == null) return false;
+        return node1.val.equals(node2.val)
+                && inorderEquals(node1.left, node2.left)
+                && inorderEquals(node1.right, node2.right);
+    }
+
+    private int hashCodeHelper(TreeNode<T> node) {
+        if(node == null) return 0;
+        int hash = node.val.hashCode();
+        hash = 31 * hash + hashCodeHelper(node.left);
+        hash = 31 * hash + hashCodeHelper(node.right);
+        return hash;
     }
 
     // ==== TRAVERSAL ====
@@ -90,48 +111,20 @@ public abstract class BinaryTree<T extends Comparable<T>> {
         return inorder(this.root);
     }
 
-    private List<T> inorder(Node<T> n) {
-        List<T> res = new ArrayList<>();
-
-        Deque<Node<T>> stack = new ArrayDeque<>();
-
-        while(n != null || !stack.isEmpty()) {
-
-            while(n != null) {
-                stack.push(n);
-                n = n.left;
-            }
-
-            n = stack.pop();
-            res.add(n.val);
-            n = n.right;
-        }
-
-        return res;
-    }
-
-    private boolean inorderEquals(Node<?> n1, Node<?> n2) {
-        if(n1 == null && n2 == null) return true;
-        if(n1 == null || n2 == null) return false;
-        return n1.val.equals(n2.val)
-                && inorderEquals(n1.left, n2.left)
-                && inorderEquals(n1.right, n2.right);
-    }
-
     public List<T> preorder() {
         List<T> res = new ArrayList<>();
         if(this.root == null) return res;
 
-        Deque<Node<T>> stack = new ArrayDeque<>();
+        Deque<TreeNode<T>> stack = new ArrayDeque<>();
         stack.push(this.root);
 
         while(!stack.isEmpty()) {
-            Node<T> n = stack.pop();
+            TreeNode<T> node = stack.pop();
 
-            if(n.right != null) stack.push(n.right);
-            if(n.left != null) stack.push(n.left);
+            if(node.right != null) stack.push(node.right);
+            if(node.left != null) stack.push(node.left);
 
-            res.add(n.val);
+            res.add(node.val);
         }
 
         return res;
@@ -144,11 +137,66 @@ public abstract class BinaryTree<T extends Comparable<T>> {
         return res;
     }
 
-    private void postorder(Node<T> n, List<T> res) {
-        if(n == null) return;
-        postorder(n.left, res);
-        postorder(n.right, res);
-        res.add(n.val);
+    public List<List<T>> bfs() {
+
+        /*
+            pair - класс, для хранения нод и их уровней в дереве
+         */
+        class P {
+            final TreeNode<T> node;
+            final int depth;
+            P(TreeNode<T> node, int depth) {
+                this.node = node;
+                this.depth = depth;
+            }
+        }
+
+        if(this.root == null) return new ArrayList<>();
+        List<List<T>> res = new ArrayList<>();
+        Deque<P> deq = new ArrayDeque<>();
+        deq.addFirst(new P(this.root, 0));
+
+        while(!deq.isEmpty()) {
+            P p = deq.pollLast();
+            TreeNode<T> node = p.node;
+            if(node.left != null) deq.addFirst(new P(node.left, p.depth +1));
+            if(node.right != null) deq.addFirst(new P(node.right, p.depth +1));
+            if(res.size() < p.depth +1) {
+                res.add(new ArrayList<>());
+                res.get(p.depth).add(node.val);
+            }
+            else res.get(p.depth).add(node.val);
+        }
+
+        return res;
     }
 
+    // хелперы
+
+    private List<T> inorder(TreeNode<T> node) {
+        List<T> res = new ArrayList<>();
+
+        Deque<TreeNode<T>> stack = new ArrayDeque<>();
+
+        while(node != null || !stack.isEmpty()) {
+
+            while(node != null) {
+                stack.push(node);
+                node = node.left;
+            }
+
+            node = stack.pop();
+            res.add(node.val);
+            node = node.right;
+        }
+
+        return res;
+    }
+
+    private void postorder(TreeNode<T> node, List<T> res) {
+        if(node == null) return;
+        postorder(node.left, res);
+        postorder(node.right, res);
+        res.add(node.val);
+    }
 }
