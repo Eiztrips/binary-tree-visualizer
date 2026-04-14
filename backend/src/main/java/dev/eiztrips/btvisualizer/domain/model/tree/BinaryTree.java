@@ -1,7 +1,5 @@
 package dev.eiztrips.btvisualizer.domain.model.tree;
 
-import lombok.Getter;
-import lombok.Setter;
 import java.util.*;
 
 /*
@@ -9,8 +7,6 @@ import java.util.*;
  */
 public abstract class BinaryTree<T extends Comparable<T>> {
 
-    @Getter
-    @Setter
     protected static class TreeNode<T extends Comparable<T>> {
         T val;
         TreeNode<T> left;
@@ -58,7 +54,7 @@ public abstract class BinaryTree<T extends Comparable<T>> {
         if(obj == this) return true;
         if(obj == null || this.getClass() != obj.getClass()) return false;
         BinaryTree<?> tree = (BinaryTree<?>) obj;
-        return inorderEquals(this.root, tree.root);
+        return isStructEqual(this.root, tree.root);
     }
 
     @Override
@@ -68,7 +64,8 @@ public abstract class BinaryTree<T extends Comparable<T>> {
 
     // хелперы
     protected int getBranchSize(TreeNode<T> node) {
-        return inorder(node).size();
+        if(node == null) return 0;
+        return 1 + getBranchSize(node.left) + getBranchSize(node.right);
     }
 
     protected void incSize() {
@@ -88,12 +85,12 @@ public abstract class BinaryTree<T extends Comparable<T>> {
         return 1 + Math.max(height(node.left), height(node.right));
     }
 
-    private boolean inorderEquals(TreeNode<? extends Comparable<?>> node1, TreeNode<? extends Comparable<?>> node2) {
+    private boolean isStructEqual(TreeNode<? extends Comparable<?>> node1, TreeNode<? extends Comparable<?>> node2) {
         if(node1 == null && node2 == null) return true;
         if(node1 == null || node2 == null) return false;
         return node1.val.equals(node2.val)
-                && inorderEquals(node1.left, node2.left)
-                && inorderEquals(node1.right, node2.right);
+                && isStructEqual(node1.left, node2.left)
+                && isStructEqual(node1.right, node2.right);
     }
 
     private int hashCodeHelper(TreeNode<T> node) {
@@ -107,33 +104,20 @@ public abstract class BinaryTree<T extends Comparable<T>> {
     // ==== TRAVERSAL ====
 
     public List<T> inorder() {
-        if(this.root == null) return new ArrayList<>();
-        return inorder(this.root);
+        List<T> res = new ArrayList<>();
+        this.inorder(this.root, res);
+        return res;
     }
 
     public List<T> preorder() {
         List<T> res = new ArrayList<>();
-        if(this.root == null) return res;
-
-        Deque<TreeNode<T>> stack = new ArrayDeque<>();
-        stack.push(this.root);
-
-        while(!stack.isEmpty()) {
-            TreeNode<T> node = stack.pop();
-
-            if(node.right != null) stack.push(node.right);
-            if(node.left != null) stack.push(node.left);
-
-            res.add(node.val);
-        }
-
+        this.preorder(this.root, res);
         return res;
     }
 
     public List<T> postorder() {
         List<T> res = new ArrayList<>();
-        if(root == null) return res;
-        postorder(this.root, res);
+        this.postorder(this.root, res);
         return res;
     }
 
@@ -142,30 +126,22 @@ public abstract class BinaryTree<T extends Comparable<T>> {
         /*
             pair - класс, для хранения нод и их уровней в дереве
          */
-        class P {
-            final TreeNode<T> node;
-            final int depth;
-            P(TreeNode<T> node, int depth) {
-                this.node = node;
-                this.depth = depth;
-            }
-        }
+        record P<T extends Comparable<T>>(TreeNode<T> node, int depth) {}
 
         if(this.root == null) return new ArrayList<>();
         List<List<T>> res = new ArrayList<>();
-        Deque<P> deq = new ArrayDeque<>();
-        deq.addFirst(new P(this.root, 0));
+        Queue<P<T>> deq = new ArrayDeque<>();
+        deq.offer(new P<>(this.root, 0));
 
         while(!deq.isEmpty()) {
-            P p = deq.pollLast();
+            P<T> p = deq.poll();
             TreeNode<T> node = p.node;
-            if(node.left != null) deq.addFirst(new P(node.left, p.depth +1));
-            if(node.right != null) deq.addFirst(new P(node.right, p.depth +1));
-            if(res.size() < p.depth +1) {
+            if(node.left != null) deq.offer(new P<>(node.left, p.depth +1));
+            if(node.right != null) deq.offer(new P<>(node.right, p.depth +1));
+            if (res.size() == p.depth) {
                 res.add(new ArrayList<>());
-                res.get(p.depth).add(node.val);
             }
-            else res.get(p.depth).add(node.val);
+            res.get(p.depth).add(node.val);
         }
 
         return res;
@@ -173,24 +149,18 @@ public abstract class BinaryTree<T extends Comparable<T>> {
 
     // хелперы
 
-    private List<T> inorder(TreeNode<T> node) {
-        List<T> res = new ArrayList<>();
+    private void inorder(TreeNode<T> node, List<T> res) {
+        if(node == null) return;
+        inorder(node.left, res);
+        res.add(node.val);
+        inorder(node.right, res);
+    }
 
-        Deque<TreeNode<T>> stack = new ArrayDeque<>();
-
-        while(node != null || !stack.isEmpty()) {
-
-            while(node != null) {
-                stack.push(node);
-                node = node.left;
-            }
-
-            node = stack.pop();
-            res.add(node.val);
-            node = node.right;
-        }
-
-        return res;
+    private void preorder(TreeNode<T> node, List<T> res) {
+        if(node == null) return;
+        res.add(node.val);
+        preorder(node.left, res);
+        preorder(node.right, res);
     }
 
     private void postorder(TreeNode<T> node, List<T> res) {

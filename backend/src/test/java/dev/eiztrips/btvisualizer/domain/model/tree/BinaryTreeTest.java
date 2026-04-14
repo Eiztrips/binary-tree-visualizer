@@ -26,6 +26,14 @@ class BinaryTreeTest {
     }
 
     @Test
+    void testGetBranchSize() {
+        BinaryTree<Integer> bt = new SimpleBinaryTree<>(this.seed);
+        for(int i = 0; i < 5; i++) bt.insert(i);
+        assertEquals(5, bt.getBranchSize(bt.root));
+        assertEquals(3, bt.getBranchSize(bt.root.right));
+    }
+
+    @Test
     void testInsert() {
         BinaryTree<Integer> bt = new SimpleBinaryTree<>();
         for(int i = 0; i < 5; i++) bt.insert(i);
