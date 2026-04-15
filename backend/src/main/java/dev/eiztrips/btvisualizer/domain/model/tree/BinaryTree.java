@@ -8,11 +8,11 @@ import java.util.*;
 public abstract class BinaryTree<T extends Comparable<T>> {
 
     protected static class TreeNode<T extends Comparable<T>> {
-        T val;
-        TreeNode<T> left;
-        TreeNode<T> right;
+        public T val;
+        public TreeNode<T> left;
+        public TreeNode<T> right;
 
-        TreeNode(T v) {
+        public TreeNode(T v) {
             this.val = v;
         }
     }
